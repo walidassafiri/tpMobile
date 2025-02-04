@@ -5,20 +5,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tpmobile.ui.theme.TpMobileTheme
 import com.example.tpmobile.R
 import kotlin.random.Random
+import android.util.Log
 
 
 
@@ -40,13 +47,37 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-            var commandes by remember { mutableStateOf(genererCommandesAleatoires(5)) }
+            var commandes by remember { mutableStateOf(genererCommandesAleatoires(15)) }
+            var conteneurs by remember { mutableStateOf<List<Conteneur>>(emptyList()) }
+            val commandesAffectees = remember { mutableStateOf(mutableSetOf<Int>()) }
+
+            val resultatsOptimises = remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
 
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") {
-                    MainScreen(navController = navController, commandes = commandes, onRegenerate = {
-                        commandes = genererCommandesAleatoires(5)
-                    })
+                    MainScreen(
+                        navController = navController,
+                        commandes = commandes,
+                        conteneurs = conteneurs,
+                        commandesAffectees = commandesAffectees.value,
+                        resultatsOptimises = resultatsOptimises,
+                        onRegenerate = {
+                            commandes = genererCommandesAleatoires(15)
+                            commandesAffectees.value.clear()
+                        },
+                        onConfigurerConteneurs = {
+                            navController.navigate("configurerConteneurs")
+                        }
+                    )
+                }
+                composable("configurerConteneurs") {
+                    ConfigurerConteneursScreen(
+                        conteneurs = conteneurs,
+                        onAjouterConteneur = { nouveauConteneur ->
+                            conteneurs = conteneurs + nouveauConteneur
+                        },
+                        navController = navController
+                    )
                 }
                 composable("detail/{commandeId}") { backStackEntry ->
                     val commandeId = backStackEntry.arguments?.getString("commandeId")?.toIntOrNull()
@@ -57,11 +88,25 @@ class MainActivity : ComponentActivity() {
                         Text("Commande non trouvée")
                     }
                 }
+                composable("conteneur/{conteneurId}") { backStackEntry ->
+                    val conteneurId = backStackEntry.arguments?.getString("conteneurId")?.toIntOrNull()
+                    val conteneur = conteneurs.firstOrNull { it.id == conteneurId }
+                    if (conteneur != null) {
+                        val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
+                        DetailConteneurScreen(
+                            conteneur = conteneur,
+                            commandes = commandesSelectionnees,
+                            navController = navController
+                        )
+                    } else {
+                        Text("Conteneur non trouvé")
+                    }
+                }
             }
         }
     }
 }
-
+// Partie Commandes
 data class Commande(
     val numero: Int,
     val poids: Double,
@@ -91,53 +136,122 @@ fun genererCommandesAleatoires(nombreCommandes: Int): List<Commande> {
 fun MainScreen(
     navController: NavController,
     commandes: List<Commande>,
-    onRegenerate: () -> Unit // Callback pour régénérer la liste
+    conteneurs: List<Conteneur>,
+    commandesAffectees: MutableSet<Int>,
+    resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>,
+    onRegenerate: () -> Unit,
+    onConfigurerConteneurs: () -> Unit
 ) {
-    Column(
+
+
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Button(
-            onClick = onRegenerate, // Appeler le callback
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Régénérer la liste")
+        item {
+            Button(
+                onClick = onRegenerate,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                Text("Régénérer les commandes")
+            }
+
+            Button(
+                onClick = onConfigurerConteneurs,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Configurer les conteneurs")
+            }
+
+
+            Button(
+                onClick = {
+                    val nouveauxResultats = mutableMapOf<Conteneur, List<Commande>>()
+                    conteneurs.forEach { conteneur ->
+                        nouveauxResultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
+                    }
+                    resultatsOptimises.value = nouveauxResultats
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Optimiser les conteneurs")
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Text(
+                text = "Liste des commandes :",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
 
-        ListeCommandes(commandes = commandes, navController = navController)
-    }
-}
-
-@Composable
-fun ListeCommandes(commandes: List<Commande>, navController: NavController) {
-    LazyColumn {
         items(commandes) { commande ->
-            CommandeItem(commande = commande, onClick = {
-                navController.navigate("detail/${commande.numero}")
-            })
+            val estAffectee = commande.numero in commandesAffectees
+            CommandeItem(
+                commande = commande,
+                estAffectee = estAffectee,
+                onClick = { navController.navigate("detail/${commande.numero}") }
+            )
+        }
+
+        item {
+            Text(
+                text = "Conteneurs et commandes optimisées :",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            )
+        }
+
+        items(conteneurs) { conteneur ->
+            val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
+            ConteneurItem(
+                conteneur = conteneur,
+                commandes = commandesSelectionnees,
+                onClick = {
+                    navController.navigate("conteneur/${conteneur.id}")
+                }
+            )
         }
     }
 }
 
+
 @Composable
-fun CommandeItem(commande: Commande, onClick: () -> Unit) {
+fun CommandeItem(commande: Commande, estAffectee: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(8.dp)
+            .background(if (estAffectee) Color.LightGray else Color.Transparent)
     ) {
         Text(
             text = "Commande #${commande.numero}",
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = if (estAffectee) Color.Gray else Color.Unspecified
         )
         Text(text = "Poids: ${commande.poids.format(2)} kg")
         Text(text = "Volume: ${commande.volume.format(2)} m³")
         Text(text = "Prix: ${commande.prix.format(2)} €")
+        if (estAffectee) {
+            Text(
+                text = "Déjà affectée à un conteneur",
+                color = Color.Red,
+                fontSize = 14.sp
+            )
+        }
     }
 }
 
@@ -170,71 +284,217 @@ fun DetailScreen(commande: Commande, navController: NavController) {
         }
     }
 }
-
-
-// Fonction pour formater les nombres avec 2 décimales
-fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*data class Message(val author: String, val body: String)
-
+// Partie Conteneur
+data class Conteneur(
+    val id: Int,
+    val poidsMax: Double,
+    val volumeMax: Double
+)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier.padding(16.dp)
-    )
-}
+fun ConfigurerConteneursScreen(
+    conteneurs: List<Conteneur>,
+    onAjouterConteneur: (Conteneur) -> Unit,
+    //onSupprimerConteneur: (Conteneur) -> Unit,
+    navController: NavController
+) {
+    var poidsMax by remember { mutableStateOf("") }
+    var volumeMax by remember { mutableStateOf("") }
 
-@Composable
-fun MessageCard(msg: Message) {
-    Row(modifier = Modifier.padding(all = 8.dp)) {
-        Image(
-            painter = painterResource(R.drawable.profile_picture),
-            contentDescription = "Contact profile picture",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Configurer les conteneurs",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        // Formulaire pour ajouter un conteneur
+        OutlinedTextField(
+            value = poidsMax,
+            onValueChange = { poidsMax = it },
+            label = { Text("Poids max (kg)") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
 
-        Column {
-            Text(text = msg.author, style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = msg.body, style = MaterialTheme.typography.bodyMedium)
+        OutlinedTextField(
+            value = volumeMax,
+            onValueChange = { volumeMax = it },
+            label = { Text("Volume max (m³)") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
+        Button(
+            onClick = {
+                val poids = poidsMax.toDoubleOrNull() ?: 0.0
+                val volume = volumeMax.toDoubleOrNull() ?: 0.0
+                if (poids > 0 && volume > 0) {
+                    val nouveauConteneur = Conteneur(
+                        id = conteneurs.size + 1, // Générer un ID unique
+                        poidsMax = poids,
+                        volumeMax = volume
+                    )
+                    onAjouterConteneur(nouveauConteneur)
+                    poidsMax = ""
+                    volumeMax = ""
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ajouter un conteneur")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Liste des conteneurs configurés
+        Text(
+            text = "Conteneurs configurés :",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        LazyColumn {
+            items(conteneurs) { conteneur ->
+                ConteneurConfigItem(
+                    conteneur = conteneur
+                    //onSupprimer = { onSupprimerConteneur(conteneur) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 100.dp)
+        ) {
+            Text("Retour")
         }
     }
 }
 
-
-//@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    TpMobileTheme {
-        Greeting("Android")
+fun ConteneurConfigItem(conteneur: Conteneur/*, onSupprimer: () -> Unit*/) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Conteneur #${conteneur.id}", fontWeight = FontWeight.Bold)
+            Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
+            Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
+        }
+        /*IconButton(onClick = onSupprimer) {
+            Icon(Icons.Default.Delete, contentDescription = "Supprimer")
+        } */
     }
 }
 
-//@Preview(showBackground = true)
+fun optimiserConteneur(
+    conteneur: Conteneur,
+    commandes: List<Commande>,
+    commandesAffectees: MutableSet<Int>
+): List<Commande> {
+    val commandesDisponibles = commandes.filter { it.numero !in commandesAffectees }
+    val commandesTriees = commandesDisponibles.sortedByDescending { it.prix }
+    val commandesSelectionnees = mutableListOf<Commande>()
+    var poidsTotal = 0.0
+    var volumeTotal = 0.0
+
+    for (commande in commandesTriees) {
+        if (poidsTotal + commande.poids <= conteneur.poidsMax &&
+            volumeTotal + commande.volume <= conteneur.volumeMax
+        ) {
+            commandesSelectionnees.add(commande)
+            poidsTotal += commande.poids
+            volumeTotal += commande.volume
+            commandesAffectees.add(commande.numero)
+        }
+    }
+
+    return commandesSelectionnees
+}
+
 @Composable
-fun PreviewMessageCard() {
-    TpMobileTheme {
-        MessageCard(Message("Android", "Jetpack Compose!"))
+fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Conteneur #${conteneur.id}",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
+        Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
+        Text(text = "Nombre de commandes: ${commandes.size}")
+        Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
     }
 }
-*/
+
+
+
+@Composable
+fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navController: NavController) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        item {
+            Text(
+                text = "Détails du conteneur #${conteneur.id}",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
+            Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
+            Text(text = "Nombre de commandes: ${commandes.size}")
+            Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Commandes dans ce conteneur :",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Liste des commandes
+        items(commandes) { commande ->
+            CommandeItem(commande = commande, estAffectee = true, onClick = {})
+        }
+
+        // Bouton "Retour"
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 100.dp) // Centrer le bouton
+            ) {
+                Text("Retour")
+            }
+        }
+    }
+}
+
+// Fonction pour formater les nombres avec 2 décimales
+fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)

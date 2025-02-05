@@ -38,8 +38,8 @@ import com.example.tpmobile.ui.theme.TpMobileTheme
 import com.example.tpmobile.R
 import kotlin.random.Random
 import android.util.Log
-
-
+import com.example.tpmobile.model.Commande
+import com.example.tpmobile.model.Conteneur
 
 
 class MainActivity : ComponentActivity() {
@@ -110,15 +110,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-// Partie Commandes
-data class Commande(
-    val numero: Int,
-    val poids: Double,
-    val volume: Double,
-    val prix: Double,
-    val priorite: String,
-    val fragile: Boolean
-)
+
 
 fun genererCommandesAleatoires(nombreCommandes: Int): List<Commande> {
     val commandes = mutableListOf<Commande>()
@@ -288,12 +280,7 @@ fun DetailScreen(commande: Commande, navController: NavController) {
         }
     }
 }
-// Partie Conteneur
-data class Conteneur(
-    val id: Int,
-    val poidsMax: Double,
-    val volumeMax: Double
-)
+
 @Composable
 fun ConfigurerConteneursScreen(
     conteneurs: List<Conteneur>,

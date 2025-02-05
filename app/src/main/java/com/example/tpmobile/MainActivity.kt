@@ -212,7 +212,15 @@ fun MainScreen(
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
         }
-
+        item {
+            val sum =sommeTotalPrixCommandes(resultatsOptimises)
+            Text(
+                text = "Recette Total: ${sum} €",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            )
+        }
         items(conteneurs) { conteneur ->
             val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
             ConteneurItem(
@@ -226,7 +234,37 @@ fun MainScreen(
     }
 }
 
+fun sommeTotalPrixCommandes(
+    resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
+): Double {
+    val sommeTotale = resultatsOptimises.value.values.flatten().sumOf { it.prix }
 
+    // Arrondir à un certain nombre de décimales
+    return sommeTotale.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
+}
+fun tauxUtilisationConteneur(
+    conteneur: Conteneur,
+    commandes: List<Commande>
+): Pair<Double, Double> {
+    // Calcul du volume et du poids utilisés par les commandes
+    val volumeUtilise = commandes.sumOf { it.volume }
+    val poidsUtilise = commandes.sumOf { it.poids }
+
+    // Calcul des taux d'utilisation
+    val tauxVolume = if (conteneur.volumeMax != 0.0) {
+        (volumeUtilise / conteneur.volumeMax) * 100
+    } else {
+        0.0
+    }
+
+    val tauxPoids = if (conteneur.poidsMax != 0.0) {
+        (poidsUtilise / conteneur.poidsMax) * 100
+    } else {
+        0.0
+    }
+
+    return Pair(tauxVolume, tauxPoids)
+}
 @Composable
 fun CommandeItem(commande: Commande, estAffectee: Boolean, onClick: () -> Unit) {
     Column(
@@ -401,7 +439,6 @@ fun ConteneurConfigItem(conteneur: Conteneur/*, onSupprimer: () -> Unit*/) {
         } */
     }
 }
-
 fun optimiserConteneur(
     conteneur: Conteneur,
     commandes: List<Commande>,
@@ -429,6 +466,7 @@ fun optimiserConteneur(
 
 @Composable
 fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -> Unit) {
+    val (tauxVolume, tauxPoids) = tauxUtilisationConteneur(conteneur, commandes)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -444,6 +482,8 @@ fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -
         Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
         Text(text = "Nombre de commandes: ${commandes.size}")
         Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
+        Text(text="Volume utilisé: %.2f%%".format(tauxVolume))
+        Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
     }
 }
 

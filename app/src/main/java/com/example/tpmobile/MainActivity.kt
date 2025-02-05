@@ -76,6 +76,10 @@ class MainActivity : ComponentActivity() {
                         onAjouterConteneur = { nouveauConteneur ->
                             conteneurs = conteneurs + nouveauConteneur
                         },
+                        onSupprimerConteneur = { conteneurASupprimer ->
+
+                            conteneurs = conteneurs.filter { it != conteneurASupprimer }
+                        },
                         navController = navController
                     )
                 }
@@ -172,11 +176,11 @@ fun MainScreen(
 
             Button(
                 onClick = {
-                    val nouveauxResultats = mutableMapOf<Conteneur, List<Commande>>()
                     conteneurs.forEach { conteneur ->
-                        nouveauxResultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
+                        if (!resultatsOptimises.value.containsKey(conteneur)) {
+                            resultatsOptimises.value = resultatsOptimises.value + (conteneur to optimiserConteneur(conteneur, commandes, commandesAffectees))
+                        }
                     }
-                    resultatsOptimises.value = nouveauxResultats
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -294,7 +298,7 @@ data class Conteneur(
 fun ConfigurerConteneursScreen(
     conteneurs: List<Conteneur>,
     onAjouterConteneur: (Conteneur) -> Unit,
-    //onSupprimerConteneur: (Conteneur) -> Unit,
+    onSupprimerConteneur: (Conteneur) -> Unit,
     navController: NavController
 ) {
     var poidsMax by remember { mutableStateOf("") }
@@ -364,8 +368,8 @@ fun ConfigurerConteneursScreen(
         LazyColumn {
             items(conteneurs) { conteneur ->
                 ConteneurConfigItem(
-                    conteneur = conteneur
-                    //onSupprimer = { onSupprimerConteneur(conteneur) }
+                    conteneur = conteneur,
+                    onSupprimer = { onSupprimerConteneur(conteneur) }
                 )
             }
         }
@@ -384,7 +388,7 @@ fun ConfigurerConteneursScreen(
 }
 
 @Composable
-fun ConteneurConfigItem(conteneur: Conteneur/*, onSupprimer: () -> Unit*/) {
+fun ConteneurConfigItem(conteneur: Conteneur, onSupprimer: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -396,9 +400,9 @@ fun ConteneurConfigItem(conteneur: Conteneur/*, onSupprimer: () -> Unit*/) {
             Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
             Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
         }
-        /*IconButton(onClick = onSupprimer) {
+        IconButton(onClick = onSupprimer) {
             Icon(Icons.Default.Delete, contentDescription = "Supprimer")
-        } */
+        }
     }
 }
 

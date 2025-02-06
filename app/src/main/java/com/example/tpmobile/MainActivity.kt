@@ -202,16 +202,7 @@ fun MainScreen(
 
         item {
             Text(
-                text = "Conteneurs et commandes optimisées :",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-            )
-        }
-        item {
-            val sum =sommeTotalPrixCommandes(resultatsOptimises)
-            Text(
-                text = "Recette Total: ${sum} €",
+                text = "Expédition :",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
@@ -230,14 +221,6 @@ fun MainScreen(
     }
 }
 
-fun sommeTotalPrixCommandes(
-    resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
-): Double {
-    val sommeTotale = resultatsOptimises.value.values.flatten().sumOf { it.prix }
-
-    // Arrondir à un certain nombre de décimales
-    return sommeTotale.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
-}
 fun tauxUtilisationConteneur(
     conteneur: Conteneur,
     commandes: List<Commande>
@@ -458,25 +441,41 @@ fun optimiserConteneur(
 @Composable
 fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -> Unit) {
     val (tauxVolume, tauxPoids) = tauxUtilisationConteneur(conteneur, commandes)
-    Column(
+    val isDisabled = commandes.isEmpty();
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(8.dp)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Conteneur #${conteneur.id}",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
-        Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
-        Text(text = "Nombre de commandes: ${commandes.size}")
-        Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
-        Text(text="Volume utilisé: %.2f%%".format(tauxVolume))
-        Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Conteneur #${conteneur.id}",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
+            Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
+            Text(text = "Nombre de commandes: ${commandes.size}")
+            Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
+            Text(text = "Volume utilisé: %.2f%%".format(tauxVolume))
+            Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
+        }
+
+        Button(
+            onClick = { /* Action pour expédier */ },
+            enabled = !isDisabled,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isDisabled) Color.Gray else Color.Blue,
+                contentColor = Color.White,
+            )
+        ) {
+            Text(if (isDisabled) "En cours" else "Expédier")
+        }
     }
 }
+
 
 
 

@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
             val commandesAffectees = remember { mutableStateOf(mutableSetOf<Int>()) }
 
             val resultatsOptimises = remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
-
+            val expedition = remember { mutableStateOf<List<Map<Conteneur, List<Commande>>>>(emptyList()) }
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") {
                     MainScreen(
@@ -61,9 +61,11 @@ class MainActivity : ComponentActivity() {
                         conteneurs = conteneurs,
                         commandesAffectees = commandesAffectees.value,
                         resultatsOptimises = resultatsOptimises,
+                        expedition = expedition,
                         onRegenerate = {
                             commandes = genererCommandesAleatoires(15)
                             commandesAffectees.value.clear()
+                            resultatsOptimises.value = emptyMap()
                         },
                         onConfigurerConteneurs = {
                             navController.navigate("configurerConteneurs")
@@ -127,7 +129,25 @@ fun genererCommandesAleatoires(nombreCommandes: Int): List<Commande> {
 
     return commandes
 }
+fun resetAndOptimizeConteneurs(
+    conteneurs: List<Conteneur>,
+    commandes: List<Commande>,
+    commandesAffectees: MutableSet<Int>,
+    resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
+):Map<Conteneur, List<Commande>> {
+    val commandesMelangees = commandes.shuffled()
+    commandesAffectees.clear()
+    val resultats = mutableMapOf<Conteneur, List<Commande>>()
+    conteneurs.forEach { conteneur ->
+        if (!resultatsOptimises.value.containsKey(conteneur)) {
 
+            resultats[conteneur] = optimiserConteneur(conteneur, commandesMelangees, commandesAffectees)
+            print(resultats[conteneur])
+        }
+    }
+    return resultatsOptimises.value
+
+}
 @Composable
 fun MainScreen(
     navController: NavController,
@@ -135,6 +155,7 @@ fun MainScreen(
     conteneurs: List<Conteneur>,
     commandesAffectees: MutableSet<Int>,
     resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>,
+    expedition: MutableState<List<Map<Conteneur, List<Commande>>>>,
     onRegenerate: () -> Unit,
     onConfigurerConteneurs: () -> Unit
 ) {
@@ -180,6 +201,20 @@ fun MainScreen(
             ) {
                 Text("Optimiser les conteneurs")
             }
+            Button(
+                onClick = {
+                    expedition.value = expedition.value + resetAndOptimizeConteneurs(conteneurs, commandes, commandesAffectees, resultatsOptimises)
+
+
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Réinitialiser et optimiser les conteneurs")
+            }
+
+
         }
 
         item {
@@ -440,6 +475,7 @@ fun optimiserConteneur(
     val commandesSelectionnees = mutableListOf<Commande>()
     var poidsTotal = 0.0
     var volumeTotal = 0.0
+
 
     for (commande in commandesTriees) {
         if (poidsTotal + commande.poids <= conteneur.poidsMax &&

@@ -3,43 +3,44 @@ package com.example.tpmobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.tpmobile.ui.theme.TpMobileTheme
-import com.example.tpmobile.R
-import kotlin.random.Random
-import android.util.Log
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
+import com.example.tpmobile.utils.format
+import kotlin.random.Random
 
 
 class MainActivity : ComponentActivity() {
@@ -51,7 +52,8 @@ class MainActivity : ComponentActivity() {
             var conteneurs by remember { mutableStateOf<List<Conteneur>>(emptyList()) }
             val commandesAffectees = remember { mutableStateOf(mutableSetOf<Int>()) }
 
-            val resultatsOptimises = remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
+            val resultatsOptimises =
+                remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
 
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") {
@@ -84,7 +86,8 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("detail/{commandeId}") { backStackEntry ->
-                    val commandeId = backStackEntry.arguments?.getString("commandeId")?.toIntOrNull()
+                    val commandeId =
+                        backStackEntry.arguments?.getString("commandeId")?.toIntOrNull()
                     val commande = commandes.firstOrNull { it.numero == commandeId }
                     if (commande != null) {
                         DetailScreen(commande = commande, navController = navController)
@@ -93,10 +96,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable("conteneur/{conteneurId}") { backStackEntry ->
-                    val conteneurId = backStackEntry.arguments?.getString("conteneurId")?.toIntOrNull()
+                    val conteneurId =
+                        backStackEntry.arguments?.getString("conteneurId")?.toIntOrNull()
                     val conteneur = conteneurs.firstOrNull { it.id == conteneurId }
                     if (conteneur != null) {
-                        val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
+                        val commandesSelectionnees =
+                            resultatsOptimises.value[conteneur] ?: emptyList()
                         DetailConteneurScreen(
                             conteneur = conteneur,
                             commandes = commandesSelectionnees,
@@ -140,7 +145,6 @@ fun MainScreen(
 ) {
 
 
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -170,7 +174,12 @@ fun MainScreen(
                 onClick = {
                     conteneurs.forEach { conteneur ->
                         if (!resultatsOptimises.value.containsKey(conteneur)) {
-                            resultatsOptimises.value = resultatsOptimises.value + (conteneur to optimiserConteneur(conteneur, commandes, commandesAffectees))
+                            resultatsOptimises.value =
+                                resultatsOptimises.value + (conteneur to optimiserConteneur(
+                                    conteneur,
+                                    commandes,
+                                    commandesAffectees
+                                ))
                         }
                     }
                 },
@@ -209,7 +218,7 @@ fun MainScreen(
             )
         }
         item {
-            val sum =sommeTotalPrixCommandes(resultatsOptimises)
+            val sum = sommeTotalPrixCommandes(resultatsOptimises)
             Text(
                 text = "Recette Total: ${sum} €",
                 fontSize = 18.sp,
@@ -238,6 +247,7 @@ fun sommeTotalPrixCommandes(
     // Arrondir à un certain nombre de décimales
     return sommeTotale.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
 }
+
 fun tauxUtilisationConteneur(
     conteneur: Conteneur,
     commandes: List<Commande>
@@ -261,6 +271,7 @@ fun tauxUtilisationConteneur(
 
     return Pair(tauxVolume, tauxPoids)
 }
+
 @Composable
 fun CommandeItem(commande: Commande, estAffectee: Boolean, onClick: () -> Unit) {
     Column(
@@ -430,6 +441,7 @@ fun ConteneurConfigItem(conteneur: Conteneur, onSupprimer: () -> Unit) {
         }
     }
 }
+
 fun optimiserConteneur(
     conteneur: Conteneur,
     commandes: List<Commande>,
@@ -473,15 +485,18 @@ fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -
         Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
         Text(text = "Nombre de commandes: ${commandes.size}")
         Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
-        Text(text="Volume utilisé: %.2f%%".format(tauxVolume))
+        Text(text = "Volume utilisé: %.2f%%".format(tauxVolume))
         Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
     }
 }
 
 
-
 @Composable
-fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navController: NavController) {
+fun DetailConteneurScreen(
+    conteneur: Conteneur,
+    commandes: List<Commande>,
+    navController: NavController
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -526,6 +541,3 @@ fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navCo
         }
     }
 }
-
-// Fonction pour formater les nombres avec 2 décimales
-fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)

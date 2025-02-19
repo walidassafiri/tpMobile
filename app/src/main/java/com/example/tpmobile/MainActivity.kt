@@ -3,7 +3,6 @@ package com.example.tpmobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,7 +36,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tpmobile.business.optimiserConteneur
 import com.example.tpmobile.business.sommeTotalPrixCommandes
-import com.example.tpmobile.business.tauxUtilisationConteneur
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.ui.components.CommandeItem
@@ -365,30 +363,6 @@ fun ConteneurConfigItem(conteneur: Conteneur, onSupprimer: () -> Unit) {
         IconButton(onClick = onSupprimer) {
             Icon(Icons.Default.Delete, contentDescription = "Supprimer")
         }
-    }
-}
-
-
-@Composable
-fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -> Unit) {
-    val (tauxVolume, tauxPoids) = tauxUtilisationConteneur(conteneur, commandes)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(8.dp)
-    ) {
-        Text(
-            text = "Conteneur #${conteneur.id}",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(text = "Poids max: ${conteneur.poidsMax.format(2)} kg")
-        Text(text = "Volume max: ${conteneur.volumeMax.format(2)} m³")
-        Text(text = "Nombre de commandes: ${commandes.size}")
-        Text(text = "Prix total: ${commandes.sumOf { it.prix }.format(2)} €")
-        Text(text = "Volume utilisé: %.2f%%".format(tauxVolume))
-        Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
     }
 }
 

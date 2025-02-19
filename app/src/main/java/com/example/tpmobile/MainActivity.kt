@@ -3,7 +3,6 @@ package com.example.tpmobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +40,7 @@ import com.example.tpmobile.business.sommeTotalPrixCommandes
 import com.example.tpmobile.business.tauxUtilisationConteneur
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
+import com.example.tpmobile.ui.components.CommandeItem
 import com.example.tpmobile.utils.format
 import com.example.tpmobile.utils.genererCommandesAleatoires
 
@@ -226,34 +225,6 @@ fun MainScreen(
     }
 }
 
-
-@Composable
-fun CommandeItem(commande: Commande, estAffectee: Boolean, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(8.dp)
-            .background(if (estAffectee) Color.LightGray else Color.Transparent)
-    ) {
-        Text(
-            text = "Commande #${commande.numero}",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (estAffectee) Color.Gray else Color.Unspecified
-        )
-        Text(text = "Poids: ${commande.poids.format(2)} kg")
-        Text(text = "Volume: ${commande.volume.format(2)} m³")
-        Text(text = "Prix: ${commande.prix.format(2)} €")
-        if (estAffectee) {
-            Text(
-                text = "Déjà affectée à un conteneur",
-                color = Color.Red,
-                fontSize = 14.sp
-            )
-        }
-    }
-}
 
 @Composable
 fun DetailScreen(commande: Commande, navController: NavController) {

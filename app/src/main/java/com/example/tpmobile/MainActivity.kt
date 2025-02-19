@@ -40,7 +40,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.utils.format
-import kotlin.random.Random
+import com.example.tpmobile.utils.genererCommandesAleatoires
 
 
 class MainActivity : ComponentActivity() {
@@ -116,22 +116,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-fun genererCommandesAleatoires(nombreCommandes: Int): List<Commande> {
-    val commandes = mutableListOf<Commande>()
-    val random = Random
-
-    for (i in 1..nombreCommandes) {
-        val poids = random.nextDouble() * 100
-        val volume = random.nextDouble() * 10
-        val prix = random.nextDouble() * 500
-        val priorite = listOf("Haute", "Moyenne", "Basse").random()
-        val fragile = random.nextBoolean()
-        commandes.add(Commande(i, poids, volume, prix, priorite, fragile))
-    }
-
-    return commandes
-}
 
 @Composable
 fun MainScreen(

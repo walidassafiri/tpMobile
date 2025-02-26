@@ -40,6 +40,8 @@ import kotlin.random.Random
 import android.util.Log
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
+import kotlin.math.ceil
+import kotlin.math.floor
 
 
 class MainActivity : ComponentActivity() {
@@ -458,8 +460,8 @@ fun optimiserConteneur(
     // Discrétiser les contraintes de poids et volume pour la programmation dynamique
     // Pour un bon équilibre entre précision et performance, on utilise un facteur de 10
     val facteurDiscretisation = 10
-    val poidsMaxDiscret = (conteneur.poidsMax * facteurDiscretisation).toInt()
-    val volumeMaxDiscret = (conteneur.volumeMax * facteurDiscretisation).toInt()
+    val poidsMaxDiscret = floor(conteneur.poidsMax ).toInt()
+    val volumeMaxDiscret = floor(conteneur.volumeMax).toInt()
 
     // Vérifier que les conteneurs ont une capacité
     if (poidsMaxDiscret <= 0 || volumeMaxDiscret <= 0) {
@@ -478,8 +480,8 @@ fun optimiserConteneur(
     // Remplir le tableau dp
     for (i in 1..commandesDisponibles.size) {
         val commande = commandesDisponibles[i - 1]
-        val poidsDiscret = (commande.poids * facteurDiscretisation).toInt()
-        val volumeDiscret = (commande.volume * facteurDiscretisation).toInt()
+        val poidsDiscret = ceil(commande.poids).toInt()
+        val volumeDiscret = ceil(commande.volume).toInt()
 
         for (w in 0..poidsMaxDiscret) {
             for (v in 0..volumeMaxDiscret) {
@@ -506,8 +508,8 @@ fun optimiserConteneur(
 
     for (i in commandesDisponibles.size downTo 1) {
         val commande = commandesDisponibles[i - 1]
-        val poidsDiscret = (commande.poids * facteurDiscretisation).toInt()
-        val volumeDiscret = (commande.volume * facteurDiscretisation).toInt()
+        val poidsDiscret = ceil(commande.poids).toInt()
+        val volumeDiscret = ceil(commande.volume).toInt()
 
         // Si cette commande fait partie de la solution optimale
         if (poidsRestant >= poidsDiscret && volumeRestant >= volumeDiscret &&

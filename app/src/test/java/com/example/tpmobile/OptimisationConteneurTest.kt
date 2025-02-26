@@ -45,8 +45,6 @@ class OptimisationConteneurTest {
         val expetedOutpout = mutableSetOf(4, 2, 1)
         val resultat = optimiserConteneur(conteneurStandard, commandes, commandesAffectees)
 
-        System.out.println(resultat)
-
         resultat.forEach { commande ->
             assertTrue(
                 "Les commandes affectées doivent être ajouté à commandesAffectes",
@@ -101,7 +99,6 @@ class OptimisationConteneurTest {
         )
 
         val resultat = optimiserConteneur(conteneurMoyen, commandesSimples, mutableSetOf())
-        System.out.println(resultat)
 
         assertEquals("Devrait choisir la combinaison optimale de commandes", 250.0,
             resultat.sumOf { it.prix }, 0.01)
@@ -118,7 +115,6 @@ class OptimisationConteneurTest {
         )
 
         val resultat = optimiserConteneur(conteneurMoyen, commandesSimples, mutableSetOf())
-        System.out.println(resultat)
 
         assertEquals("Devrait choisir la combinaison optimale de commandes", 250.0,
             resultat.sumOf { it.prix }, 0.01)
@@ -137,9 +133,25 @@ class OptimisationConteneurTest {
         )
 
         val resultat = optimiserConteneur(conteneur, commandes, mutableSetOf())
-        System.out.println(resultat)
 
         assertEquals("Devrait choisir la combinaison optimale de commandes", 12.0,
+            resultat.sumOf { it.prix }, 0.01)
+    }
+
+
+    @Test
+    fun `test floting number acceptance`() {
+        // Cas où on peut placer exactement 2 commandes pour un prix optimal
+        val conteneurMoyen = Conteneur(1, poidsMax = 50.866, volumeMax = 50.636)
+        val commandesSimples = listOf(
+            Commande(1, poids = 09.853, volume = 19.635, prix = 100.895, priorite = "NORMALE", fragile = false),
+            Commande(2, poids = 4.8620,  volume = 19.560, prix = 150.561, priorite = "NORMALE", fragile = false),
+            Commande(3, poids = 9.753, volume = 44.856, prix = 200.560, priorite = "NORMALE", fragile = false)
+        )
+
+        val resultat = optimiserConteneur(conteneurMoyen, commandesSimples, mutableSetOf())
+
+        assertEquals("Devrait choisir la combinaison optimale de commandes", 251.45600000000002,
             resultat.sumOf { it.prix }, 0.01)
     }
 }

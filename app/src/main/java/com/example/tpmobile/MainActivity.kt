@@ -430,24 +430,95 @@ fun ConteneurConfigItem(conteneur: Conteneur, onSupprimer: () -> Unit) {
         }
     }
 }
+
+
+/**
+ * Optimise le chargement d'un conteneur en maximisant la valeur totale des commandes
+ * tout en respectant les contraintes de poids et volume.
+ * Utilise une approche de programmation dynamique pour résoudre le problème de sac à dos à deux contraintes.
+ *
+ * @param conteneur Le conteneur avec ses contraintes de poids et volume
+ * @param commandes La liste de toutes les commandes disponibles
+ * @param commandesAffectees Ensemble des numéros de commandes déjà affectées (modifié par la fonction)
+ * @return La liste des commandes sélectionnées pour le conteneur
+ */
 fun optimiserConteneur(
     conteneur: Conteneur,
     commandes: List<Commande>,
     commandesAffectees: MutableSet<Int>
 ): List<Commande> {
-    val commandesDisponibles = commandes.filter { it.numero !in commandesAffectees }
-    val commandesTriees = commandesDisponibles.sortedByDescending { it.prix }
-    val commandesSelectionnees = mutableListOf<Commande>()
-    var poidsTotal = 0.0
-    var volumeTotal = 0.0
+    // Filtrer les commandes déjà affectées
+    val commandesDisponibles = commandes.filter { !commandesAffectees.contains(it.numero) }
 
-    for (commande in commandesTriees) {
-        if (poidsTotal + commande.poids <= conteneur.poidsMax &&
-            volumeTotal + commande.volume <= conteneur.volumeMax
+    // Vérifier s'il y a des commandes disponibles
+    if (commandesDisponibles.isEmpty()) {
+        return listOf()
+    }
+
+    // Discrétiser les contraintes de poids et volume pour la programmation dynamique
+    // Pour un bon équilibre entre précision et performance, on utilise un facteur de 10
+    val facteurDiscretisation = 10
+    val poidsMaxDiscret = (conteneur.poidsMax * facteurDiscretisation).toInt()
+    val volumeMaxDiscret = (conteneur.volumeMax * facteurDiscretisation).toInt()
+
+    // Vérifier que les conteneurs ont une capacité
+    if (poidsMaxDiscret <= 0 || volumeMaxDiscret <= 0) {
+        return listOf()
+    }
+
+    // Créer le tableau 3D pour la programmation dynamique
+    // dp[i][w][v] représente la valeur maximale qu'on peut obtenir
+    // en considérant les i premières commandes avec un poids w et un volume v
+    val dp = Array(commandesDisponibles.size + 1) {
+        Array(poidsMaxDiscret + 1) {
+            DoubleArray(volumeMaxDiscret + 1) { 0.0 }
+        }
+    }
+
+    // Remplir le tableau dp
+    for (i in 1..commandesDisponibles.size) {
+        val commande = commandesDisponibles[i - 1]
+        val poidsDiscret = (commande.poids * facteurDiscretisation).toInt()
+        val volumeDiscret = (commande.volume * facteurDiscretisation).toInt()
+
+        for (w in 0..poidsMaxDiscret) {
+            for (v in 0..volumeMaxDiscret) {
+                // Par défaut, on prend la valeur sans inclure cette commande
+                dp[i][w][v] = dp[i - 1][w][v]
+
+                // Si on peut inclure cette commande dans les limites de poids et volume
+                if (w >= poidsDiscret && v >= volumeDiscret) {
+                    // On prend le maximum entre ne pas inclure la commande
+                    // et inclure la commande + la meilleure solution avec le reste
+                    dp[i][w][v] = maxOf(
+                        dp[i][w][v],
+                        dp[i - 1][w - poidsDiscret][v - volumeDiscret] + commande.prix
+                    )
+                }
+            }
+        }
+    }
+
+    // Trouver les commandes sélectionnées en remontant la solution
+    val commandesSelectionnees = mutableListOf<Commande>()
+    var poidsRestant = poidsMaxDiscret
+    var volumeRestant = volumeMaxDiscret
+
+    for (i in commandesDisponibles.size downTo 1) {
+        val commande = commandesDisponibles[i - 1]
+        val poidsDiscret = (commande.poids * facteurDiscretisation).toInt()
+        val volumeDiscret = (commande.volume * facteurDiscretisation).toInt()
+
+        // Si cette commande fait partie de la solution optimale
+        if (poidsRestant >= poidsDiscret && volumeRestant >= volumeDiscret &&
+            dp[i][poidsRestant][volumeRestant] != dp[i - 1][poidsRestant][volumeRestant] &&
+            dp[i][poidsRestant][volumeRestant] == dp[i - 1][poidsRestant - poidsDiscret][volumeRestant - volumeDiscret] + commande.prix
         ) {
             commandesSelectionnees.add(commande)
-            poidsTotal += commande.poids
-            volumeTotal += commande.volume
+            poidsRestant -= poidsDiscret
+            volumeRestant -= volumeDiscret
+
+            // Ajouter la commande à l'ensemble des commandes affectées
             commandesAffectees.add(commande.numero)
         }
     }

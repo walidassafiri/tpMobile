@@ -40,6 +40,22 @@ class OptimisationConteneurTest {
     }
 
     @Test
+    fun `test commandes bien ajoutées à commandesAffectees`() {
+        val commandesAffectees = mutableSetOf(5, 3)
+        val expetedOutpout = mutableSetOf(4, 2, 1)
+        val resultat = optimiserConteneur(conteneurStandard, commandes, commandesAffectees)
+
+        System.out.println(resultat)
+
+        resultat.forEach { commande ->
+            assertTrue(
+                "Les commandes affectées doivent être ajouté à commandesAffectes",
+                commandesAffectees.contains(commande.numero)
+            )
+        }
+    }
+
+    @Test
     fun `test respect des contraintes de poids et volume`() {
         val resultat = optimiserConteneur(conteneurStandard, commandes, mutableSetOf())
 

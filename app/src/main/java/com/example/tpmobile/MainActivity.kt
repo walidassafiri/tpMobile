@@ -38,6 +38,8 @@ import com.example.tpmobile.ui.theme.TpMobileTheme
 import com.example.tpmobile.R
 import kotlin.random.Random
 import android.util.Log
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 
@@ -50,7 +52,7 @@ class MainActivity : ComponentActivity() {
             var commandes by remember { mutableStateOf(genererCommandesAleatoires(15)) }
             var conteneurs by remember { mutableStateOf<List<Conteneur>>(emptyList()) }
             val commandesAffectees = remember { mutableStateOf(mutableSetOf<Int>()) }
-
+            val commandesAffecteesExpedition = remember { mutableStateOf(mutableSetOf<Int>()) }
             val resultatsOptimises = remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
             val expedition = remember { mutableStateOf<List<Map<Conteneur, List<Commande>>>>(emptyList()) }
             NavHost(navController = navController, startDestination = "main") {
@@ -62,10 +64,12 @@ class MainActivity : ComponentActivity() {
                         commandesAffectees = commandesAffectees.value,
                         resultatsOptimises = resultatsOptimises,
                         expedition = expedition,
+                        commandesAffecteesExpedition = commandesAffecteesExpedition.value ,
                         onRegenerate = {
                             commandes = genererCommandesAleatoires(15)
                             commandesAffectees.value.clear()
                             resultatsOptimises.value = emptyMap()
+                            expedition.value= emptyList()
                         },
                         onConfigurerConteneurs = {
                             navController.navigate("configurerConteneurs")
@@ -135,17 +139,17 @@ fun resetAndOptimizeConteneurs(
     commandesAffectees: MutableSet<Int>,
     resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
 ):Map<Conteneur, List<Commande>> {
-    val commandesMelangees = commandes.shuffled()
+    val conteneursMelangees = conteneurs.shuffled()
     commandesAffectees.clear()
     val resultats = mutableMapOf<Conteneur, List<Commande>>()
-    conteneurs.forEach { conteneur ->
-        if (!resultatsOptimises.value.containsKey(conteneur)) {
+    conteneursMelangees.forEach { conteneur ->
+       // if (!resultatsOptimises.value.containsKey(conteneur)) {
 
-            resultats[conteneur] = optimiserConteneur(conteneur, commandesMelangees, commandesAffectees)
-            print(resultats[conteneur])
-        }
+            resultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
+
+     //   }
     }
-    return resultatsOptimises.value
+    return resultats
 
 }
 @Composable
@@ -156,6 +160,7 @@ fun MainScreen(
     commandesAffectees: MutableSet<Int>,
     resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>,
     expedition: MutableState<List<Map<Conteneur, List<Commande>>>>,
+    commandesAffecteesExpedition: MutableSet<Int>,
     onRegenerate: () -> Unit,
     onConfigurerConteneurs: () -> Unit
 ) {
@@ -203,7 +208,7 @@ fun MainScreen(
             }
             Button(
                 onClick = {
-                    expedition.value = expedition.value + resetAndOptimizeConteneurs(conteneurs, commandes, commandesAffectees, resultatsOptimises)
+                    expedition.value = expedition.value + resetAndOptimizeConteneurs(conteneurs, commandes, commandesAffecteesExpedition, resultatsOptimises)
 
 
                 },
@@ -211,7 +216,7 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                Text("Réinitialiser et optimiser les conteneurs")
+                Text("Plan d'execution")
             }
 
 
@@ -262,7 +267,28 @@ fun MainScreen(
                 }
             )
         }
+
+        items(expedition.value) { plan ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            ) {
+
+                Text(text = "Plan d'expédition :", fontWeight = FontWeight.Bold)
+                plan.forEach { (conteneur, commandes) ->
+                    Text(text = "📦 Conteneur : ${conteneur.id}")
+                    commandes.forEach { commande ->
+                        Text(text = "   ➜ Commande : ${commande.numero}")
+                    }
+                }
+            }
+        }
+
     }
+
 }
 
 fun sommeTotalPrixCommandes(
@@ -562,6 +588,29 @@ fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navCo
         }
     }
 }
-
+/*
+@Composable
+fun ExpeditionScreen(expedition: List<Map<Conteneur, List<Commande>>>) {
+    LazyColumn {
+        items(expedition) { plan ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+            ) {
+                Text(text = "Plan d'expédition :", fontWeight = FontWeight.Bold)
+                plan.forEach { (conteneur, commandes) ->
+                    Text(text = "📦 Conteneur : ${conteneur.id}")
+                    commandes.forEach { commande ->
+                        Text(text = "   ➜ Commande : ${commande.numero}")
+                    }
+                }
+            }
+        }
+    }
+}
+*/
 // Fonction pour formater les nombres avec 2 décimales
 fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)

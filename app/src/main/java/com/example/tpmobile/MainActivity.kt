@@ -39,6 +39,7 @@ import com.example.tpmobile.R
 import kotlin.random.Random
 import android.util.Log
 import androidx.compose.foundation.border
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
@@ -148,6 +149,7 @@ fun resetAndOptimizeConteneurs(
             resultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
 
      //   }
+
     }
     return resultats
 
@@ -268,28 +270,64 @@ fun MainScreen(
             )
         }
 
-        items(expedition.value) { plan ->
-            Column(
+        itemsIndexed(expedition.value) { index, plan ->
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                    .padding(8.dp)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(6.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)) // Fond bleu clair
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "🚚 Plan d'expédition n°${index + 1}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFF1976D2) // Bleu foncé
+                    )
 
-                Text(text = "Plan d'expédition :", fontWeight = FontWeight.Bold)
-                plan.forEach { (conteneur, commandes) ->
-                    Text(text = "📦 Conteneur : ${conteneur.id}")
-                    commandes.forEach { commande ->
-                        Text(text = "   ➜ Commande : ${commande.numero}")
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    var conteneurIndex = 0
+                    val conteneurCount = plan.size
+
+                    plan.entries.forEach { (conteneur, commandes) ->
+                        Column {
+                            Text(
+                                text = "📦 Conteneur : ${conteneur.id}",
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp,
+                                color = Color(0xFF388E3C) // Vert foncé
+                            )
+
+                            commandes.forEach { commande ->
+                                Text(
+                                    text = "   ➜ Commande : ${commande.numero}",
+                                    fontSize = 14.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+
+                            if (conteneurIndex < conteneurCount - 1) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Divider(color = Color.LightGray, thickness = 1.dp)
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+                            conteneurIndex++
+                        }
                     }
                 }
             }
         }
 
     }
-
 }
+
 
 fun sommeTotalPrixCommandes(
     resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>

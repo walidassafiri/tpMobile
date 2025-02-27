@@ -106,7 +106,6 @@ class OptimisationConteneurTest {
 
     @Test
     fun `test meilleure combinaison possible contrainte sur volume`() {
-        // Cas où on peut placer exactement 2 commandes pour un prix optimal
         val conteneurMoyen = Conteneur(1, poidsMax = 50.0, volumeMax = 50.0)
         val commandesSimples = listOf(
             Commande(1, poids = 10.0, volume = 20.0, prix = 100.0, priorite = "NORMALE", fragile = false),
@@ -141,7 +140,6 @@ class OptimisationConteneurTest {
 
     @Test
     fun `test floting number acceptance`() {
-        // Cas où on peut placer exactement 2 commandes pour un prix optimal
         val conteneurMoyen = Conteneur(1, poidsMax = 50.866, volumeMax = 50.636)
         val commandesSimples = listOf(
             Commande(1, poids = 09.853, volume = 19.635, prix = 100.895, priorite = "NORMALE", fragile = false),

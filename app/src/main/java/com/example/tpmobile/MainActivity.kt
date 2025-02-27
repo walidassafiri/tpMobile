@@ -458,8 +458,6 @@ fun optimiserConteneur(
     }
 
     // Discrétiser les contraintes de poids et volume pour la programmation dynamique
-    // Pour un bon équilibre entre précision et performance, on utilise un facteur de 10
-    val facteurDiscretisation = 10
     val poidsMaxDiscret = floor(conteneur.poidsMax ).toInt()
     val volumeMaxDiscret = floor(conteneur.volumeMax).toInt()
 

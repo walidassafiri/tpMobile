@@ -201,6 +201,7 @@ fun MainScreen(
                             resultatsOptimises.value = resultatsOptimises.value + (conteneur to optimiserConteneur(conteneur, commandes, commandesAffectees))
                         }
                     }
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -208,18 +209,48 @@ fun MainScreen(
             ) {
                 Text("Optimiser les conteneurs")
             }
-            Button(
-                onClick = {
-                    expedition.value = expedition.value + resetAndOptimizeConteneurs(conteneurs, commandes, commandesAffecteesExpedition, resultatsOptimises)
+            val messageErreur = remember { mutableStateOf("") }
+
+            Column {
+                Button(
+                    onClick = {
+                        if ((conteneurs.sumOf { it.poidsMax } >= commandes.sumOf { it.poids }) &&
+                            (conteneurs.sumOf { it.volumeMax } >= commandes.sumOf { it.volume })) {
 
 
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Text("Plan d'execution")
+                            messageErreur.value = ""
+
+
+                            expedition.value = expedition.value + resetAndOptimizeConteneurs(
+                                conteneurs,
+                                commandes,
+                                commandesAffecteesExpedition,
+                                resultatsOptimises
+                            )
+
+                        } else {
+
+                            messageErreur.value = "⚠️ Il n'y a pas assez de conteneurs pour expédier toutes les commandes."
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Text("Plan d'expedition")
+                }
+
+
+                if (messageErreur.value.isNotEmpty()) {
+                    Text(
+                        text = messageErreur.value,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
+
 
 
         }
@@ -250,7 +281,7 @@ fun MainScreen(
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
         }
-        item {
+      /*  item {
             val sum =sommeTotalPrixCommandes(resultatsOptimises)
             Text(
                 text = "Recette Total: ${sum} €",
@@ -258,7 +289,7 @@ fun MainScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
-        }
+        } */
         items(conteneurs) { conteneur ->
             val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
             ConteneurItem(
@@ -277,7 +308,7 @@ fun MainScreen(
                     .padding(8.dp),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(6.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)) // Fond bleu clair
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
             ) {
                 Column(
                     modifier = Modifier
@@ -288,11 +319,18 @@ fun MainScreen(
                         text = "🚚 Plan d'expédition n°${index + 1}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF1976D2) // Bleu foncé
+                        color = Color(0xFF1976D2)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
-
+                    val sum =sommeTotalPrixCommandes(plan)
+                    Text(
+                        text = "Recette Total: ${sum} €",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     var conteneurIndex = 0
                     val conteneurCount = plan.size
 
@@ -302,9 +340,11 @@ fun MainScreen(
                                 text = "📦 Conteneur : ${conteneur.id}",
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp,
-                                color = Color(0xFF388E3C) // Vert foncé
+                                color = Color(0xFF388E3C)
                             )
-
+                            val (tauxVolume, tauxPoids) = tauxUtilisationConteneur(conteneur, commandes)
+                            Text(text="Volume utilisé: %.2f%%".format(tauxVolume))
+                            Text(text = "Poids utilisé: %.2f%%".format(tauxPoids))
                             commandes.forEach { commande ->
                                 Text(
                                     text = "   ➜ Commande : ${commande.numero}",
@@ -330,9 +370,9 @@ fun MainScreen(
 
 
 fun sommeTotalPrixCommandes(
-    resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
+    resultatsOptimises: Map<Conteneur, List<Commande>>
 ): Double {
-    val sommeTotale = resultatsOptimises.value.values.flatten().sumOf { it.prix }
+    val sommeTotale = resultatsOptimises.values.flatten().sumOf { it.prix }
 
     // Arrondir à un certain nombre de décimales
     return sommeTotale.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
@@ -465,7 +505,7 @@ fun ConfigurerConteneursScreen(
                 val volume = volumeMax.toDoubleOrNull() ?: 0.0
                 if (poids > 0 && volume > 0) {
                     val nouveauConteneur = Conteneur(
-                        id = conteneurs.size + 1, // Générer un ID unique
+                        id = conteneurs.size + 1,
                         poidsMax = poids,
                         volumeMax = volume
                     )
@@ -626,29 +666,6 @@ fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navCo
         }
     }
 }
-/*
-@Composable
-fun ExpeditionScreen(expedition: List<Map<Conteneur, List<Commande>>>) {
-    LazyColumn {
-        items(expedition) { plan ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                    .padding(8.dp)
-            ) {
-                Text(text = "Plan d'expédition :", fontWeight = FontWeight.Bold)
-                plan.forEach { (conteneur, commandes) ->
-                    Text(text = "📦 Conteneur : ${conteneur.id}")
-                    commandes.forEach { commande ->
-                        Text(text = "   ➜ Commande : ${commande.numero}")
-                    }
-                }
-            }
-        }
-    }
-}
-*/
+
 // Fonction pour formater les nombres avec 2 décimales
 fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)

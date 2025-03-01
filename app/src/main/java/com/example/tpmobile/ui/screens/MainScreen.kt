@@ -13,7 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -25,12 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.tpmobile.model.Commande
-import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.business.optimiserConteneur
 import com.example.tpmobile.business.resetAndOptimizeConteneurs
 import com.example.tpmobile.business.sommeTotalPrixCommandes
 import com.example.tpmobile.business.tauxUtilisationConteneur
+import com.example.tpmobile.model.Commande
+import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.ui.components.CommandeItem
 import com.example.tpmobile.ui.components.ConteneurItem
 
@@ -243,7 +243,7 @@ fun MainScreen(
 
                             if (conteneurIndex < conteneurCount - 1) {
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Divider(color = Color.LightGray, thickness = 1.dp)
+                                HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
                                 Spacer(modifier = Modifier.height(6.dp))
                             }
                             conteneurIndex++

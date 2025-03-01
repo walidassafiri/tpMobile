@@ -12,7 +12,8 @@ fun optimiserConteneur(
     val commandesDisponibles = commandes.filter { it.numero !in commandesAffectees }
 
     // Trie les commandes par rapport d'efficacité décroissant
-    val commandesTriees = commandesDisponibles.sortedByDescending { it.prix / (it.poids + it.volume) }
+    val commandesTriees =
+        commandesDisponibles.sortedByDescending { it.prix / (it.poids + it.volume) }
 
     val commandesSelectionnees = mutableListOf<Commande>()
     var poidsTotal = 0.0

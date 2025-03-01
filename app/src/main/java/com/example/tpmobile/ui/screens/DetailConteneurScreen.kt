@@ -15,13 +15,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.tpmobile.utils.format
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.ui.components.CommandeItem
+import com.example.tpmobile.utils.format
 
 @Composable
-fun DetailConteneurScreen(conteneur: Conteneur, commandes: List<Commande>, navController: NavController) {
+fun DetailConteneurScreen(
+    conteneur: Conteneur,
+    commandes: List<Commande>,
+    navController: NavController
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

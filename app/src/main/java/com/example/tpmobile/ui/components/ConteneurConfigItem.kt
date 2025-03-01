@@ -14,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.tpmobile.utils.format
 import com.example.tpmobile.model.Conteneur
+import com.example.tpmobile.utils.format
 
 @Composable
 fun ConteneurConfigItem(conteneur: Conteneur, onSupprimer: () -> Unit) {

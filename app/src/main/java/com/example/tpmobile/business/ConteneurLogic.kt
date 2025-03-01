@@ -9,22 +9,21 @@ fun resetAndOptimizeConteneurs(
     commandes: List<Commande>,
     commandesAffectees: MutableSet<Int>,
     resultatsOptimises: MutableState<Map<Conteneur, List<Commande>>>
-):Map<Conteneur, List<Commande>> {
+): Map<Conteneur, List<Commande>> {
     val conteneursMelangees = conteneurs.shuffled()
     commandesAffectees.clear()
     val resultats = mutableMapOf<Conteneur, List<Commande>>()
     conteneursMelangees.forEach { conteneur ->
-       // if (!resultatsOptimises.value.containsKey(conteneur)) {
+        // if (!resultatsOptimises.value.containsKey(conteneur)) {
 
-            resultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
+        resultats[conteneur] = optimiserConteneur(conteneur, commandes, commandesAffectees)
 
-     //   }
+        //   }
 
     }
     return resultats
 
 }
-
 
 
 fun sommeTotalPrixCommandes(
@@ -35,7 +34,6 @@ fun sommeTotalPrixCommandes(
     // Arrondir à un certain nombre de décimales
     return sommeTotale.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
 }
-
 
 
 fun tauxUtilisationConteneur(

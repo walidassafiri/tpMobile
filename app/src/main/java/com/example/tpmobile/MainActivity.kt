@@ -3,11 +3,11 @@ package com.example.tpmobile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -29,8 +29,10 @@ class MainActivity : ComponentActivity() {
             var conteneurs by remember { mutableStateOf<List<Conteneur>>(emptyList()) }
             val commandesAffectees = remember { mutableStateOf(mutableSetOf<Int>()) }
             val commandesAffecteesExpedition = remember { mutableStateOf(mutableSetOf<Int>()) }
-            val resultatsOptimises = remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
-            val expedition = remember { mutableStateOf<List<Map<Conteneur, List<Commande>>>>(emptyList()) }
+            val resultatsOptimises =
+                remember { mutableStateOf<Map<Conteneur, List<Commande>>>(emptyMap()) }
+            val expedition =
+                remember { mutableStateOf<List<Map<Conteneur, List<Commande>>>>(emptyList()) }
             NavHost(navController = navController, startDestination = "main") {
                 composable("main") {
                     MainScreen(
@@ -40,12 +42,12 @@ class MainActivity : ComponentActivity() {
                         commandesAffectees = commandesAffectees.value,
                         resultatsOptimises = resultatsOptimises,
                         expedition = expedition,
-                        commandesAffecteesExpedition = commandesAffecteesExpedition.value ,
+                        commandesAffecteesExpedition = commandesAffecteesExpedition.value,
                         onRegenerate = {
                             commandes = genererCommandesAleatoires(15)
                             commandesAffectees.value.clear()
                             resultatsOptimises.value = emptyMap()
-                            expedition.value= emptyList()
+                            expedition.value = emptyList()
                         },
                         onConfigurerConteneurs = {
                             navController.navigate("configurerConteneurs")
@@ -66,7 +68,8 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("detail/{commandeId}") { backStackEntry ->
-                    val commandeId = backStackEntry.arguments?.getString("commandeId")?.toIntOrNull()
+                    val commandeId =
+                        backStackEntry.arguments?.getString("commandeId")?.toIntOrNull()
                     val commande = commandes.firstOrNull { it.numero == commandeId }
                     if (commande != null) {
                         DetailScreen(commande = commande, navController = navController)
@@ -75,10 +78,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable("conteneur/{conteneurId}") { backStackEntry ->
-                    val conteneurId = backStackEntry.arguments?.getString("conteneurId")?.toIntOrNull()
+                    val conteneurId =
+                        backStackEntry.arguments?.getString("conteneurId")?.toIntOrNull()
                     val conteneur = conteneurs.firstOrNull { it.id == conteneurId }
                     if (conteneur != null) {
-                        val commandesSelectionnees = resultatsOptimises.value[conteneur] ?: emptyList()
+                        val commandesSelectionnees =
+                            resultatsOptimises.value[conteneur] ?: emptyList()
                         DetailConteneurScreen(
                             conteneur = conteneur,
                             commandes = commandesSelectionnees,
@@ -92,5 +97,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-

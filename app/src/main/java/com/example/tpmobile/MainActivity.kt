@@ -28,9 +28,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
-import com.example.tpmobile.ui.theme.components.CommandeItem
-import com.example.tpmobile.ui.theme.components.ConteneurConfigItem
-import com.example.tpmobile.ui.theme.components.ConteneurItem
+import com.example.tpmobile.ui.components.CommandeItem
+import com.example.tpmobile.ui.components.ConteneurConfigItem
+import com.example.tpmobile.ui.components.ConteneurItem
 
 
 class MainActivity : ComponentActivity() {

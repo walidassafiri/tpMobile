@@ -1,4 +1,4 @@
-package com.example.tpmobile.ui.theme.components
+package com.example.tpmobile.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

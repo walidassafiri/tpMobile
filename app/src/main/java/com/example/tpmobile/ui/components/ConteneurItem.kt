@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.tpmobile.format
+import com.example.tpmobile.utils.format
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.tauxUtilisationConteneur

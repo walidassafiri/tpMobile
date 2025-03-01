@@ -12,13 +12,13 @@ import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlin.random.Random
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
 import com.example.tpmobile.ui.screens.ConfigurerConteneursScreen
 import com.example.tpmobile.ui.screens.DetailConteneurScreen
 import com.example.tpmobile.ui.screens.DetailScreen
 import com.example.tpmobile.ui.screens.MainScreen
+import com.example.tpmobile.utils.genererCommandesAleatoires
 
 
 class MainActivity : ComponentActivity() {
@@ -95,21 +95,6 @@ class MainActivity : ComponentActivity() {
 }
 
 
-fun genererCommandesAleatoires(nombreCommandes: Int): List<Commande> {
-    val commandes = mutableListOf<Commande>()
-    val random = Random
-
-    for (i in 1..nombreCommandes) {
-        val poids = random.nextDouble() * 100
-        val volume = random.nextDouble() * 10
-        val prix = random.nextDouble() * 500
-        val priorite = listOf("Haute", "Moyenne", "Basse").random()
-        val fragile = random.nextBoolean()
-        commandes.add(Commande(i, poids, volume, prix, priorite, fragile))
-    }
-
-    return commandes
-}
 fun resetAndOptimizeConteneurs(
     conteneurs: List<Conteneur>,
     commandes: List<Commande>,
@@ -197,5 +182,3 @@ fun optimiserConteneur(
 }
 
 
-// Fonction pour formater les nombres avec 2 décimales
-fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)

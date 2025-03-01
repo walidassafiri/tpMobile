@@ -577,9 +577,6 @@ fun optimiserConteneur(
     // Filtre les commandes déjà affectées
     val commandesDisponibles = commandes.filter { it.numero !in commandesAffectees }
 
-    if (commandesDisponibles.isEmpty()) {
-        return listOf()
-    }
 
     // Trie les commandes par rapport d'efficacité décroissant
     val commandesTriees = commandesDisponibles.sortedByDescending { it.prix / (it.poids + it.volume) }

@@ -27,10 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
-import com.example.tpmobile.optimiserConteneur
-import com.example.tpmobile.resetAndOptimizeConteneurs
-import com.example.tpmobile.sommeTotalPrixCommandes
-import com.example.tpmobile.tauxUtilisationConteneur
+import com.example.tpmobile.business.optimiserConteneur
+import com.example.tpmobile.business.resetAndOptimizeConteneurs
+import com.example.tpmobile.business.sommeTotalPrixCommandes
+import com.example.tpmobile.business.tauxUtilisationConteneur
 import com.example.tpmobile.ui.components.CommandeItem
 import com.example.tpmobile.ui.components.ConteneurItem
 

@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.sp
 import com.example.tpmobile.utils.format
 import com.example.tpmobile.model.Commande
 import com.example.tpmobile.model.Conteneur
-import com.example.tpmobile.tauxUtilisationConteneur
+import com.example.tpmobile.business.tauxUtilisationConteneur
 
 @Composable
 fun ConteneurItem(conteneur: Conteneur, commandes: List<Commande>, onClick: () -> Unit) {

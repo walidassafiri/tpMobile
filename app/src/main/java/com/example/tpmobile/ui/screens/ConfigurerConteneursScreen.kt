@@ -87,7 +87,6 @@ fun ConfigurerConteneursScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Liste des conteneurs configurés
         Text(
             text = "Conteneurs configurés :",
             fontSize = 18.sp,
@@ -95,7 +94,9 @@ fun ConfigurerConteneursScreen(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
             items(conteneurs) { conteneur ->
                 ConteneurConfigItem(
                     conteneur = conteneur,
@@ -105,6 +106,7 @@ fun ConfigurerConteneursScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
 
         Button(
             onClick = { navController.popBackStack() },
